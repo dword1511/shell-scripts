@@ -129,5 +129,33 @@ Example output:
 
 The second device is a BCM43326. Perhaps I will add identification for those devices as well, in the future.
 
+uartled.sh
+----------
 
+This script uses a TTL UART port to control a LED for you.
+After all, "U" stands for "universal".
 
+However, you do need a LED,
+a NPN transistor (if you do not want to risk burning anything, PN2222A used here),
+a capacitor that is about 10-22uF,
+and 2 resistors (one for the LED and the other for the base of the transistor,
+recommend 100R and 1k, respectively).
+
+Connect the things as following:
+
+	Vcc --[+ LED -]--[100R resistor]--/C|   ____________
+	TX  ---[1k resistor]-------------( B|--/+ 22uF     /\
+	GND ------------------------------\E|--\- capacitor\/
+
+The capacitor eliminates high frequency components from the UART line,
+so the LED does not appear to be on during the off period.
+
+Then, call the script like this:
+
+	./uartled.sh /dev/ttyUSB0 500 1000
+
+The LED will be turned on for approximately 500ms,
+then turned off for approximately 1000ms.
+
+The idea arose when the laboratory ran out of Arduinos for some LED related sensing project.
+I do have a lot of USB to UART bridges.
