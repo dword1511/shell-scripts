@@ -1,0 +1,220 @@
+#!/bin/sh
+
+arm_part () {
+  # Provided by ARM's documentation.
+  case $1 in
+    "0x920")
+      echo "ARM920"
+      ;;
+    "0x922")
+      echo "ARM922"
+      ;;
+    "0x926")
+      echo "ARM926"
+      ;;
+    "0x940")
+      echo "ARM940"
+      ;;
+    "0x946")
+      echo "ARM946"
+      ;;
+    "0x966")
+      echo "ARM966"
+      ;;
+    "0x968")
+      echo "ARM968"
+      ;;
+    "0xb02")
+      echo "ARM11 MPCore"
+      ;;
+    "0xb36")
+      echo "ARM1136"
+      ;;
+    "0xb56")
+      echo "ARM1156"
+      ;;
+    "0xb76")
+      echo "ARM1176"
+      ;;
+    "0xc05")
+      echo "Cortex-A5"
+      ;;
+    "0xc07")
+      echo "Cortex-A7"
+      ;;
+    "0xc08")
+      echo "Cortex-A8"
+      ;;
+    "0xc09")
+      echo "Cortex-A9"
+      ;;
+    "0xc0c")
+      echo "Cortex-A12"
+      ;;
+    "0xc0f")
+      echo "Cortex-A15"
+      ;;
+    "0xd03")
+      echo "Cortex-A53"
+      ;;
+    "0xd07")
+      echo "Cortex-A57"
+      ;;
+    *)
+      printf "Unknown part 0x%03x" $1
+      ;;
+  esac
+}
+
+dec_part () {
+  # We do not know much about these.
+  # http://permalink.gmane.org/gmane.linux.linaro.devel/6913
+  case $1 in
+    "0xa11")
+      echo "StrongARM SA-1100"
+      ;;
+    *)
+      printf "Unknown part 0x%03x" $1
+      ;;
+  esac
+}
+
+qualcomm_part () {
+  # Guess
+  case $1 in
+    "0x00f")
+      # Found on Snapdragon S1/S2 with single core Scorpion
+      echo "Scorpion"
+      ;;
+    "0x02d")
+      # Found on Snapdragon S3 with dual core Scorpion
+      echo "Dual Scorpion"
+      ;;
+    "0x04d")
+      # Found on Snapdragon S4 with dual core Krait 200/300
+      echo "Dual Krait"
+      ;;
+    "0x06f")
+      # Found on Snapdragon 600/800 with quad core Krait 300/400
+      echo "Quad Krait"
+      ;;
+    *)
+      printf "Unknown part 0x%03x" $1
+      ;;
+  esac
+}
+
+marvell_part () {
+  # Guess
+  case $1 in
+    "0x131")
+      # http://discypus.jp/wiki/?Linux%2Fcpuinfo#content_1_7
+      # http://www.gentoo.org/proj/en/base/embedded/handbook/?part=4&chap=6
+      echo "Feroceon"
+      ;;
+    "0x581")
+      # https://github.com/ssvb/xf86-video-fbturbo/blob/master/src/cpuinfo.c
+      # http://archlinuxarm.org/forum/viewtopic.php?f=9&t=5566
+      # http://www.techbang.com/posts/14629-buffalo-ls420d-beginner-2bay-home-nas#comment-126970
+      echo "PJ4/PJ4b"
+      ;;
+    "0x584")
+      # https://github.com/basilfx/ix4-300d/blob/master/dumps/firmware_default/cpuinfo.txt
+      # http://www.spinics.net/lists/arm-kernel/msg284095.html
+      echo "Dual PJ4/PJ4b"
+      ;;
+    *)
+      printf "Unknown part 0x%03x" $1
+      ;;
+  esac
+}
+
+intel_part () {
+  # From Intel's documentation:
+  # [15:13] Core Generation, 0b001 means XScale, 0b010 can mean XScale with iwMMXt
+  # [12:10] Core Revision
+  # [9:4] Product Number
+
+  GEN=$((($1 & 0xe00) >> 9))
+  REV=$((($1 & 0x1c0) >> 6))
+  PROD=$(($1 & 0x03f))
+
+  case $GEN in
+    1)
+      GEN="XScale"
+      ;;
+    2)
+      GEN="XScale with iwMMXt"
+      ;;
+    3)
+      # https://git.kernel.org/cgit/linux/kernel/git/nico/orion.git/tree/arch/arm/include/asm/cputype.h
+      GEN="XScale3"
+      ;;
+    5)
+      # http://permalink.gmane.org/gmane.linux.linaro.devel/6913
+      GEN="StrongARM SA-1110"
+      ;;
+    *)
+      GEN="Generation $GEN"
+      ;;
+  esac
+
+  echo "$GEN Rev $REV Product $PROD"
+}
+
+if [ -z `uname -m | grep arm` ]
+then
+  echo "Not an ARM machine."
+  exit 1
+fi
+
+IMPLEMENTER=`cat /proc/cpuinfo | grep "CPU implementer" | cut -d : -f 2 | cut -d " " -f 2`
+ARCH=`cat /proc/cpuinfo | grep "CPU architecture" | cut -d : -f 2 | cut -d " " -f 2`
+PART=`cat /proc/cpuinfo | grep "CPU part" | cut -d : -f 2 | cut -d " " -f 2`
+MAJOR=`cat /proc/cpuinfo | grep "CPU variant" | cut -d : -f 2 | cut -d " " -f 2`
+MINOR=`cat /proc/cpuinfo | grep "CPU revision" | cut -d : -f 2 | cut -d " " -f 2`
+
+# ARCH is string not number
+ARCH="ARMv${ARCH}"
+# MAJOR from hex to dec
+MAJOR=`printf "%d" $MAJOR`
+
+# http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ihi0014q/Bcfihfdj.html
+case $IMPLEMENTER in
+  "0x41")
+    IMPLEMENTER="ARM Ltd."
+    PART=`arm_part $PART`
+    ;;
+  "0x44")
+    IMPLEMENTER="Digital Equipment Corp."
+    PART=`dec_part $PART`
+    ;;
+  "0x4d")
+    IMPLEMENTER="Freescale Semiconductor, Inc."
+    # Anybody see any of these?
+    #PART=`motorola_part $PART`
+    ;;
+  "0x51")
+    IMPLEMENTER="Qualcomm Technologies, Inc."
+    PART=`qualcomm_part $PART`
+    ;;
+   # 0x54 for TI915T/TI925T, but who knows what are these?
+  "0x56")
+    IMPLEMENTER="Marvell Technology Group Ltd."
+    PART=`marvell_part $PART`
+    ;;
+  "0x69")
+    IMPLEMENTER="Intel Corp."
+    # Form the datasheet: MINOR is the stepping code and has different meaning.
+    PART=`intel_part $PART`
+    PART=`printf "%s Stepping %d" $PART $MINOR`
+    ;;
+  *)
+    IMPLEMENTER=`printf "Unknown implementer 0x%02x" $IMPLEMENTER`
+    ;;
+esac
+
+echo $IMPLEMENTER $ARCH "Processor"
+echo $PART "r${MAJOR}p${MINOR}"
+
+exit 0

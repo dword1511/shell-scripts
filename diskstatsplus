@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# Fields in /proc/diskstats (from Documentation/iostats.txt)
+#
+# Field 1, 2, 3: major, minor and name of the storage device.
+# Field 4      : number of reads completed successfully.
+# Field 5      : number of reads merged.
+#                Reads and writes which are adjacent to each other may be merged for
+#                efficiency. Thus two 4K reads may become one 8K read before it is
+#                ultimately handed to the disk, and so it will be counted (and queued)
+#                as only one I/O. This field lets you know how often this was done.
+# Field 6      : number of sectors read successfully.
+# Field 7      : number of milliseconds spent reading.
+#                This is the total number of milliseconds spent by all reads (as
+#                measured from __make_request() to end_that_request_last()).
+#                NOTE: This time is "weighted" (See field 14). It can be greater than the
+#                wall time.
+# Field 8      : number of writes completed successfully.
+# Field 9      : number of writes merged (See field 5).
+# Field 10     : number of sectors written successfully.
+# Field 11     : number of milliseconds spent writing.
+#                This is the total number of milliseconds spent by all writes (as
+#                measured from __make_request() to end_that_request_last()).
+# Field 12     : number of I/Os currently in progress
+#                The only field that should go to zero. Incremented as requests are
+#                given to appropriate struct request_queue and decremented as they finish.
+# Field 13     : number of milliseconds spent doing I/Os.
+#                This field increases so long as field 9 is nonzero.
+# Field 14     : weighted number of milliseconds spent doing I/Os.
+#                This field is incremented at each I/O start, I/O completion, I/O
+#                merge, or read of these stats by the number of I/Os in progress
+#                (field 12) times the number of milliseconds spent doing I/O since the
+#                last update of this field.  This can provide an easy measure of both
+#                I/O completion time and the backlog that may be accumulating.
+#
+# 1 logical sector = 512B = 0.5KiB
+
+if echo $1 | egrep -q '^[0-9\.]+$'
+then
+  watch -d -t -n $1 $0
+  exit 0
+fi
+
+cat /proc/diskstats | awk '
+function human(x) {
+  s = "KMGTPEYZ"
+  n = 1
+
+  while (x >= 1024 && length(s) > 1) {
+    x /= 1024
+    s  = substr(s, n + 1)
+  }
+
+  s = substr(s, 1, n)
+  return sprintf("%8.3f %s", x, s)
+}
+
+function human2(x) {
+  s = x / 1000.0
+  m = int(s / 60)
+  h = int(m / 60)
+
+  return sprintf("%3d:%02d:%02d.%03d", h, m % 60, int(s % 60), (s - int(s)) * 1000)
+}
+
+BEGIN {
+  print "Deivce;  Read IEC; Write IEC;Ops;    Wall Time;Weighted Time\n========\n"
+}
+
+{
+  printf "%s;%s;%s;%d;%s;%s\n", $3, human($6/2), human($10/2), $12, human2($13), human2($14)
+}' | \
+column -t -s ';'
+
