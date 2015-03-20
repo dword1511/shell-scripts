@@ -168,11 +168,11 @@ then
   exit 1
 fi
 
-IMPLEMENTER=`cat /proc/cpuinfo | grep "CPU implementer" | cut -d : -f 2 | cut -d " " -f 2`
-ARCH=`cat /proc/cpuinfo | grep "CPU architecture" | cut -d : -f 2 | cut -d " " -f 2`
-PART=`cat /proc/cpuinfo | grep "CPU part" | cut -d : -f 2 | cut -d " " -f 2`
-MAJOR=`cat /proc/cpuinfo | grep "CPU variant" | cut -d : -f 2 | cut -d " " -f 2`
-MINOR=`cat /proc/cpuinfo | grep "CPU revision" | cut -d : -f 2 | cut -d " " -f 2`
+IMPLEMENTER=`cat /proc/cpuinfo | grep "CPU implementer" | cut -d : -f 2 | cut -d " " -f 2 | head -1`
+ARCH=`cat /proc/cpuinfo | grep "CPU architecture" | cut -d : -f 2 | cut -d " " -f 2 | head -1`
+PART=`cat /proc/cpuinfo | grep "CPU part" | cut -d : -f 2 | cut -d " " -f 2 | head -1`
+MAJOR=`cat /proc/cpuinfo | grep "CPU variant" | cut -d : -f 2 | cut -d " " -f 2 | head -1`
+MINOR=`cat /proc/cpuinfo | grep "CPU revision" | cut -d : -f 2 | cut -d " " -f 2 | head -1`
 
 # ARCH is string not number
 ARCH="ARMv${ARCH}"
