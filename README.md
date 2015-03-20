@@ -135,17 +135,18 @@ uartled.sh
 This script uses a TTL UART port to control a LED for you.
 After all, "U" stands for "universal".
 
-However, you do need a LED,
-a NPN transistor (if you do not want to risk burning anything, PN2222A used here),
-a capacitor that is about 10-22uF,
-and 2 resistors (one for the LED and the other for the base of the transistor,
-recommend 100R and 1k, respectively).
+However, you do need a few extra components: a LED,
+a NPN transistor (PN2222A used here),
+2 resistors (one for the LED and the other for the base of the transistor,
+recommend 100R and 1k, respectively),
+a capacitor that is about 2.2-22uF (depending on the base resistor),
 
 Connect the things as following:
 
 	Vcc --[+ LED -]--[100R resistor]--/C|   ____________
-	TX  ---[1k resistor]-------------( B|--/+ 22uF     /\
+	TX  --------[1k resistor]--------( B|--/+ 2.2uF    /\
 	GND ------------------------------\E|--\- capacitor\/
+	                                PN2222A
 
 The capacitor eliminates high frequency components from the UART line,
 so the LED does not appear to be on during the off period.
