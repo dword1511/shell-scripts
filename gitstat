@@ -1,0 +1,4 @@
+#!/bin/sh
+
+git log --pretty=tformat: --numstat | awk '{cmt ++; ins += $1; del += $2;} END {printf("%d commits, %d insertions, %d deletions, %d total.\n", cmt, ins, del, ins + del)}'
+
