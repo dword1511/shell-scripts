@@ -80,7 +80,7 @@ sda_manufacturer () {
       echo "Fujifilm?"
       ;;
     "0x000074")
-      echo "Transcend?"
+      echo "Transcend"
       ;;
     "0x000082")
       echo "JT??"
