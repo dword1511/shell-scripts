@@ -39,7 +39,7 @@ You can also pass a integer argument to the script to enter the monitoring mode.
 The integer controls how many seconds to wait between each update.
 
 gen\_oui\_table.sh
-----------------
+------------------
 
 Grab the latest OUI data from IEEE's website and turn it into a C header.
 You also get the data as well.
@@ -73,6 +73,16 @@ Example output (the header):
 	
 	#endif /* __OUI_H__ */
 
+gitstat
+-------
+
+Gives numbers for total commits and modifications.
+
+Example output:
+
+	$ ./gitstat
+	13 commits, 910 insertions, 12 deletions, 922 total.
+
 mmcinfo
 -------
 
@@ -83,7 +93,7 @@ or SBCs such as Raspberry Pi or Beaglebone.
 
 Example output:
 
-	dword@rk3188:~$ ./mmcinfo 
+	$ ./mmcinfo
 	MMC Host Controller "mmc0":
 	  Driver: rk29_sdmmc
 	  Alias : platform:rk29_sdmmc
@@ -128,6 +138,32 @@ Example output:
 	  =========================================
 
 The second device is a BCM43326. Perhaps I will add identification for those devices as well, in the future.
+
+texcat.sh
+---------
+
+Convert large LaTeX projects into plain text for spell and grammar checking.
+Currently work-in-progress.
+
+thermal.sh
+----------
+
+Read temperature on Raspberry Pis.
+Also works on ACPI (x86) machines but most of them have proper hwmon drivers anyway.
+
+Example output:
+
+	$ ./thermal.sh
+	zone0:  57.3°C (bcm2835_thermal)
+
+	$ ./thermal.sh
+	zone0:  67.0°C (x86_pkg_temp, passive = 0.0°C, passive = 0.0°C)
+
+trimverify.sh
+-------------
+
+(Slowly) verify whether a file or directory is affected by certain SSD TRIM bugs.
+May have lots of false positives, especially for certain file types.
 
 uartled.sh
 ----------
