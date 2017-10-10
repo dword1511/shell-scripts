@@ -33,17 +33,34 @@ latexpand "${1}" > "${TMPFN}"
 # Cannot use space as delimiter. At least this does not appear often...
 IFS='%'
 # A hell of escape characters ... escape sed, then shell (twice for enclosed command!!)
-for sedarg in `latexpand "${1}" | grep '\\\\def' | sed 's/^\\\def\\\\\([^{]*\){\(.*\)}.*$/s\/\\\\\1\/\2\/g%/' | sed 's/\\\\\(.\)/\\\\\\\\\1/g'`; do
-  # sponge will absorb all output before opening the file and write-back, thus preventing destroying the content
-  cat "${TMPFN}" | sed "${sedarg}" | sponge "${TMPFN}"
+for sedarg in `grep '\\\\def\\\\' "${TMPFN}" | sed 's/^\\\def\\\\\([^{]*\){\(.*\)}.*$/s\/\\\\\1\/\2\/g%/' | sed 's/\\\\\(.\)/\\\\\\\\\1/g'`; do
+  case `echo "${sedarg}" | tr -d '\n'` in
+    s*)
+      # sponge will absorb all output before opening the file and write-back, thus preventing destroying the content
+      cat "${TMPFN}" | sed "${sedarg}" | sponge "${TMPFN}"
+    ;;
+    *)
+      echo "BUG:" "${sedarg}"
+    ;;
+  esac
 done
+unset IFS
 
 # Remove unnecessary newlines
 sed ':a;N;$!{/\n$/!ba};s/[[:blank:]]*\n[[:blank:]]*/ /g;s/$/\n/' "${TMPFN}" | sponge "${TMPFN}"
 # Fixed translations
 cat "${TMPFN}" | \
-    sed 's/\\xspace/ /g' | \
-    sponge "${TMPFN}"
+    perl -p0e '
+    s/^.*\\begin\{document\}/\\begin\{document\}/smg;
+    s/\\begin\{comment\}.*?\\end\{comment\}//sg;
+    ' | \
+    perl -pe '
+    s/\\xspace/ /g;
+    s/\\cite\{.*?\}//g;
+    s/\\ref\{.*?\}/Ref./g;
+    s/\\cref\{.*?\}/Ref./g;
+    s/ +/ /g;
+    ' | sponge "${TMPFN}"
 
 # Parse and cleanup
 pandoc -f latex "${TMPFN}" --wrap=none -t markdown -o - | \
@@ -63,6 +80,5 @@ pandoc -f latex "${TMPFN}" --wrap=none -t markdown -o - | \
     cat - > ${OUTFN}
 
 # TODO: extract all captions since pandoc does not handle them correctly
-# latexpand main.tex | grep '\\caption' -C 2 | sed ':a;N;$!{/\n$/!ba};s/[[:blank:]]*\n[[:blank:]]*/ /g;s/$/\n/' | sed 's/--/\n/g' | sed 's/^.*\\caption//g;s/\\label.*$//g'
 
-#rm "${TMPFN}"
+rm "${TMPFN}"
