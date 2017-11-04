@@ -1,0 +1,17 @@
+#~/bin/sh
+
+# See https://stackoverflow.com/a/3452888/6520528
+# Will give warning if nothing is currently installed locally
+
+# Things that will stop working if installed locally:
+#   pip
+#   binwalk
+
+if which pip > /dev/null; then
+  pip freeze --local | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
+fi
+
+if which pip3 > /dev/null; then
+  pip3 freeze --local | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install -U
+fi
+
