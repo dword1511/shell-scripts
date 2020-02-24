@@ -41,7 +41,9 @@ then
   exit 0
 fi
 
-cat /proc/diskstats | awk '
+EXCLUDE="loop|ram|zram"
+
+cat /proc/diskstats | egrep -v "[0-9 ]+(${EXCLUDE})" | awk '
 function human(x) {
   s = "KMGTPEYZ"
   n = 1
