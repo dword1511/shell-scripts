@@ -45,7 +45,9 @@ EXCLUDE="loop|ram|zram"
 
 cat /proc/diskstats | egrep -v "[0-9 ]+(${EXCLUDE})" | awk '
 function human(x) {
-  s = "KMGTPEYZ"
+  #s = "KMGTPEYZ"
+  # Limit to GiB since most disk IO is in the order of MiB/s
+  s = "KMG"
   n = 1
 
   while (x >= 1024 && length(s) > 1) {
@@ -54,7 +56,7 @@ function human(x) {
   }
 
   s = substr(s, 1, n)
-  return sprintf("%8.3f %s", x, s)
+  return sprintf("%10.3f %s", x, s)
 }
 
 function human2(x) {
@@ -62,15 +64,15 @@ function human2(x) {
   m = int(s / 60)
   h = int(m / 60)
 
-  return sprintf("%3d:%02d:%02d.%03d", h, m % 60, int(s % 60), (s - int(s)) * 1000)
+  return sprintf("%5d:%02d:%02d.%03d", h, m % 60, int(s % 60), (s - int(s)) * 1000)
 }
 
 BEGIN {
-  print "Deivce;  Read IEC; Write IEC;Ops;    Wall Time;Weighted Time\n========\n"
+  print "Deivce;    Read IEC;   Write IEC;  Ops;      Wall Time;  Weighted Time\n========\n"
 }
 
 {
-  printf "%s;%s;%s;%d;%s;%s\n", $3, human($6/2), human($10/2), $12, human2($13), human2($14)
+  printf "%s;%s;%s;%5d;%s;%s\n", $3, human($6/2), human($10/2), $12, human2($13), human2($14)
 }' | \
 column -t -s ';'
 
